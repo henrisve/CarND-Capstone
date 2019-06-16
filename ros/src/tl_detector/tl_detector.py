@@ -13,7 +13,7 @@ import yaml
 import math
 from scipy.spatial import KDTree
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 2
 
 
 
@@ -21,7 +21,7 @@ class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
         self.skip_n_img_cnt = 15
-        self.skip_n_img = 10
+        self.skip_n_img = 5
         self.pose = None
         self.waypoints = None
         self.camera_image = None

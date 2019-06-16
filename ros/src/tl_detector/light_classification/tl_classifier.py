@@ -4,12 +4,36 @@ import os
 import tensorflow as tf
 import numpy as np
 from PIL import ImageDraw
-COLOR_LIST = {"0":(0,0,0),
-              "1":(0,0,255),
-              "2":(0,255,255),
-              "3":(255,0,255),
-              "4":(255,255,255)
-              }
+LIGHT_DICT = {
+    "0":{ # Seems to not be in use. remove?
+        "color":(0,0,0),
+        "name":'UNKNOWN',
+        "tr":TrafficLight.UNKNOWN
+    },
+    "1":{
+        "color":(0,255,0),
+        "name":'GREEN',
+        "tr":TrafficLight.GREEN
+    },
+    "2":{
+        "color":(0,0,255),
+        "name":'RED',
+        "tr":TrafficLight.RED
+    },
+    "3":{
+        "color":(0,255,255),
+        "name":'YELLOW',
+        "tr":TrafficLight.YELLOW
+    },
+    "4":{
+        "color":(255,255,255),
+        "name":'UNKNOWN',
+        "tr":TrafficLight.UNKNOWN
+    }
+}
+
+draw_image=True
+
 class TLClassifier(object):
     def __init__(self):
                 #TODO load classifier
@@ -49,7 +73,8 @@ class TLClassifier(object):
         """    
         print("do it")
         #maybe we need
-        image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
+        t_ligth=TrafficLight.UNKNOWN
+        image_np = np.expand_dims(np.asarray(cv2.cvtColor(image,cv2.COLOR_BGR2RGB), dtype=np.uint8), 0)
         with tf.Session(graph=self.graph) as sess:         
             (boxes, scores, classes, num) = sess.run(
                     [self.detect_boxes, self.detect_scores, self.detect_classes, self.num_detections],
@@ -62,28 +87,27 @@ class TLClassifier(object):
             boxes = np.squeeze(boxes)
             scores = np.squeeze(scores)
             classes = np.squeeze(classes)
-
-            confidence_cutoff = 0.2
+            confidence_cutoff = 0.3
             # Filter boxes with a confidence score less than `confidence_cutoff`
             boxes, scores, classes = filter_boxes(confidence_cutoff, boxes, scores, classes)
+            if len(classes)>0:
+                best_index = np.argmax(scores)
+                t_ligth = LIGHT_DICT[str(int(classes[best_index]))]["tr"]
 
-            # The current box coordinates are normalized to a range between 0 and 1.
-            # This converts the coordinates actual location on the image.
-            print(image.shape)
-            height, width,_ = image.shape
-            box_coords = to_image_coords(boxes, height, width)
-
-            # Each class with be represented by a differently colored box
-            image=draw_boxes(image, box_coords, classes,scores)
-
-        self.counter += 1 
-        pt=os.path.abspath("./i{}.png".format(self.counter))
-        print(pt)
-        cv2.imwrite(pt,image)
+            if draw_image:
+                # The current box coordinates are normalized to a range between 0 and 1.
+                # This converts the coordinates actual location on the image.
+                height, width,_ = image.shape
+                box_coords = to_image_coords(boxes, height, width)
+                # Each class with be represented by a differently colored box
+                image=draw_boxes(image, box_coords, classes, scores)
+                self.counter += 1 
+                pt=os.path.abspath("./i{}.png".format(self.counter))
+                print(pt)
+                cv2.imwrite(pt,image)
         #TODO implement light color prediction
-        
-        #return 
-        return TrafficLight.UNKNOWN
+    
+        return t_ligth
 
 def filter_boxes(min_score, boxes, scores, classes):
     """Return boxes with a confidence >= `min_score`"""
@@ -121,8 +145,8 @@ def draw_boxes(image, boxes, classes, scores,thickness=4):
         print(bot,left,top,right)
         class_id = int(classes[i])
         
-        text = str(class_id) + str(scores[i])
-        color = COLOR_LIST[str(class_id)]
+        text = LIGHT_DICT[str(class_id)]["name"] + " p:" +  str(scores[i])
+        color = LIGHT_DICT[str(class_id)]["color"]
         image = cv2.rectangle(image,(left,bot ), (right, top) ,color,2)
         image = cv2.putText(image, text, (right, bot), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
     return image
