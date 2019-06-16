@@ -79,6 +79,7 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+  #      print("ne1")
         self.skip_n_img_cnt+=1
         if self.skip_n_img_cnt > self.skip_n_img:
             self.skip_n_img_cnt=0
@@ -142,7 +143,7 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        return light.state
+        #return light.state
 
         if(not self.has_image):
             self.prev_light_loc = None
@@ -162,6 +163,7 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+       # print("process traffic")
         closest_light = None
         line_wp_idx = None
         # List of positions that correspond to the line to stop in front of for a given intersection
