@@ -5,11 +5,6 @@ import tensorflow as tf
 import numpy as np
 from PIL import ImageDraw
 LIGHT_DICT = {
-    "0":{ # Seems to not be in use. remove?
-        "color":(0,0,0),
-        "name":'UNKNOWN',
-        "tr":TrafficLight.UNKNOWN
-    },
     "1":{
         "color":(0,255,0),
         "name":'GREEN',
@@ -35,14 +30,14 @@ LIGHT_DICT = {
 draw_image=True
 
 class TLClassifier(object):
-    def __init__(self):
-                #TODO load classifier
+    def __init__(self): # Todo, self.is_site should be given depending on which file was starting ros, fix that.
         self.is_site = False ## False = simulator
         if self.is_site:
             path = "./models/ssd_udacity/frozen_inference_graph.pb"
         else:
-            path = "./models/ssd_sim/frozen_inference_graph.pb"
+            path = "./models/ssd_sim/frozen_inference_graph.pb" 
         print("intit ml")
+        
         self.graph = tf.Graph()
         with self.graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -57,8 +52,6 @@ class TLClassifier(object):
         self.num_detections = self.graph.get_tensor_by_name('num_detections:0')
  
         self.counter = 0
-
-
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
 
@@ -71,8 +64,6 @@ class TLClassifier(object):
         /base_waypoints topics and publishes the locations to stop for red traffic
          lights to the /traffic_waypoint topic.
         """    
-        print("do it")
-        #maybe we need
         t_ligth=TrafficLight.UNKNOWN
         image_np = np.expand_dims(np.asarray(cv2.cvtColor(image,cv2.COLOR_BGR2RGB), dtype=np.uint8), 0)
         with tf.Session(graph=self.graph) as sess:         
@@ -105,10 +96,10 @@ class TLClassifier(object):
                 pt=os.path.abspath("./i{}.png".format(self.counter))
                 print(pt)
                 cv2.imwrite(pt,image)
-        #TODO implement light color prediction
-    
+
         return t_ligth
 
+# Functions below copied from the udacity object detection notebook
 def filter_boxes(min_score, boxes, scores, classes):
     """Return boxes with a confidence >= `min_score`"""
     n = len(classes)
@@ -139,7 +130,6 @@ def to_image_coords(boxes, height, width):
 
 def draw_boxes(image, boxes, classes, scores,thickness=4):
     """Draw bounding boxes on the image"""
-    #draw = ImageDraw.Draw(image)
     for i in range(len(boxes)):
         bot, left, top, right = boxes[i, ...]
         print(bot,left,top,right)
